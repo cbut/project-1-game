@@ -1,0 +1,20 @@
+canvas {
+  border: 1px solid white;
+}
+
+#wrapping-div {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+}
+
+.game-intro {
+  border: 1px solid white;
+  width: 200px;
+  height: 500px;
+}
+
+* {
+  background-color: black;
+  color: white;
+}
