@@ -1,6 +1,9 @@
 let gameCanvas
 let ctx
 let playerCharacter
+// mapSize = how many tiles the map square has
+let mapSize = 50;
+let levelMap = []
 
 class cell {
     constructor(x, y) {
@@ -9,6 +12,7 @@ class cell {
         this.heigth = 50;
         this.width = 50;
         this.border = true;
+        this.isPlayerInCell = false;
     }
 }
 
@@ -23,23 +27,16 @@ class player {
     }
 }
 
-
-let levelMap = [[],
-[],
-[],
-[],
-[],]
-
-
-
 function populateLevelMapWithCells() {
-    for (i = 0; i < 5; i++) {
-        for (j = 0; j < 5; j++) {
+    for (i = 0; i < mapSize; i++) {
+        levelMap[i] = new Array()
+        for (j = 0; j < mapSize; j++) {
             cellObject = new cell((i * 50), (j * 50))
             levelMap[i].push(cellObject)
         }
     }
     levelMap[1][1].border = false
+    levelMap[1][1].isPlayerInCell = true
     levelMap[1][2].border = false
     levelMap[1][3].border = false
     levelMap[2][3].border = false
@@ -48,11 +45,11 @@ function populateLevelMapWithCells() {
 }
 
 function drawCells() {
-    for (i = 0; i < 5; i++) {
-        for (j = 0; j < 5; j++) {
+    for (i = 0; i < levelMap.length; i++) {
+        for (j = 0; j < levelMap.length; j++) {
             let location = levelMap[i][j]
             if (location.border == true) {
-                ctx.fillStyle = "black"
+                ctx.fillStyle = "DarkGrey"
                 ctx.fillRect(location.x, location.y, location.heigth, location.width)
                 ctx.fillStyle = "black"
             }
@@ -64,6 +61,16 @@ function drawCells() {
         }
     }
 }
+
+// function findPlayer() {
+//     for (i = 0; i < levelMap.length; i++) {
+//         for (j = 0; j < levelMap.length; j++) {
+//             if (levelMap[i][j].isPlayerInCell == true) {
+//                 return [levelMap[i][j].x, levelMap[i][j].y]
+//             }
+//         }
+//     }
+// }
 
 function clearBoard() {
     fillStyle = "black"
@@ -112,11 +119,6 @@ function startGame() {
         }
     };
 }
-
-
-
-
-
 
 
 window.onload = function () {
