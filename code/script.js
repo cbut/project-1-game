@@ -2,7 +2,7 @@ let gameCanvas
 let ctx
 let playerCharacter
 // mapSize = how many tiles the map square has
-let mapSize = 50;
+let mapSize = 20;
 let levelMap = []
 
 class cell {
@@ -62,15 +62,15 @@ function drawCells() {
     }
 }
 
-// function findPlayer() {
-//     for (i = 0; i < levelMap.length; i++) {
-//         for (j = 0; j < levelMap.length; j++) {
-//             if (levelMap[i][j].isPlayerInCell == true) {
-//                 return [levelMap[i][j].x, levelMap[i][j].y]
-//             }
-//         }
-//     }
-// }
+function findPlayer() {
+    for (i = 0; i < levelMap.length; i++) {
+        for (j = 0; j < levelMap.length; j++) {
+            if (levelMap[i][j].isPlayerInCell == true) {
+                return [i, j]
+            }
+        }
+    }
+}
 
 function clearBoard() {
     fillStyle = "black"
@@ -81,7 +81,7 @@ function drawPlayer() {
     player = new Image(50, 50)
     player.src = './images/big_zombie_idle_anim_f0.png';
     player.onload = function () {
-        ctx.drawImage(player, playerCharacter.x, playerCharacter.y, 50, 50)
+        ctx.drawImage(player, (findPlayer()[0] * 50), (findPlayer()[1] * 50), 50, 50)
     }
 }
 
@@ -101,19 +101,39 @@ function startGame() {
     document.onkeydown = function (e) {
         switch (e.keyCode) {
             case 38: // up arrow
-                playerCharacter.moveDirection(0, -50);
+                if (levelMap[findPlayer()[0]][(findPlayer()[1] - 1)].border == false) {
+                    let currentX = findPlayer()[0]
+                    let currentY = findPlayer()[1]
+                    levelMap[currentX][currentY - 1].isPlayerInCell = true
+                    levelMap[currentX][currentY].isPlayerInCell = false
+                }
                 drawBoard()
                 break;
             case 40: // down arrow
-                playerCharacter.moveDirection(0, 50);
+                if (levelMap[findPlayer()[0]][(findPlayer()[1] + 1)].border == false) {
+                    let currentX = findPlayer()[0]
+                    let currentY = findPlayer()[1]
+                    levelMap[currentX][currentY + 1].isPlayerInCell = true
+                    levelMap[currentX][currentY].isPlayerInCell = false
+                }
                 drawBoard()
                 break;
             case 37: // left arrow
-                playerCharacter.moveDirection(-50, 0);
+                if (levelMap[(findPlayer()[0] - 1)][findPlayer()[1]].border == false) {
+                    let currentX = findPlayer()[0]
+                    let currentY = findPlayer()[1]
+                    levelMap[currentX - 1][currentY].isPlayerInCell = true
+                    levelMap[currentX][currentY].isPlayerInCell = false
+                }
                 drawBoard()
                 break;
             case 39: // right arrow
-                playerCharacter.moveDirection(50, 0);
+                if (levelMap[(findPlayer()[0] + 1)][findPlayer()[1]].border == false) {
+                    let currentX = findPlayer()[0]
+                    let currentY = findPlayer()[1]
+                    levelMap[currentX + 1][currentY].isPlayerInCell = true
+                    levelMap[currentX][currentY].isPlayerInCell = false
+                }
                 drawBoard()
                 break;
         }
