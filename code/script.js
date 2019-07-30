@@ -6,6 +6,7 @@ let mapSize = 10;
 let tileSize = 25;
 let levelMap = []
 let monstersInLevel = []
+let state
 
 class cell {
     constructor(x, y) {
@@ -19,16 +20,28 @@ class cell {
 
 class player {
     constructor(x, y) {
-        this.maximumHealth = 100;
-        this.currentHealth = 100;
-        this.strength = 30;
-        this.armor = 8;
+        this.maximumHealth = 50;
+        this.currentHealth = 1;
+        this.damage = 10;
+        this.armor = 4;
+        this.experiencePoints = 0;
         this.x = x;
         this.y = y;
     }
     moveDirection(horizontal, vertical) {
         this.x += horizontal;
         this.y += vertical;
+    }
+
+    attack(enemy) {
+        let dealtDamage = Math.floor(Math.random() * playerCharacter.damage) - enemy.armor
+        if (dealtDamage <= 0) { dealtDamage = 0 }
+        enemy.currentHealth -= dealtDamage
+        if (enemy.currentHealth > 0) {
+            appendInfoBar(`Hero hits monster for ${dealtDamage}`)
+        } else {
+            appendInfoBar(`Hero kills monster with ${dealtDamage}`)
+        }
     }
 }
 
@@ -36,13 +49,26 @@ class monster {
     constructor(x, y) {
         this.maximumHealth = 25;
         this.currentHealth = 25;
-        this.strength = 10;
+        this.damage = 10;
+        this.armor = 1;
         this.x = x;
         this.y = y;
     }
     moveDirection(horizontal, vertical) {
         this.x += horizontal;
         this.y += vertical;
+    }
+    attack() {
+        let dealtDamage = Math.floor(Math.random() * this.damage) - playerCharacter.armor
+        if (dealtDamage <= 0) { dealtDamage = 0 }
+        playerCharacter.currentHealth -= dealtDamage
+        if (playerCharacter.currentHealth > 0) {
+            appendInfoBar(`Monster hits Hero for ${dealtDamage}`)
+            updateHeroStatsInInfoBar()
+        } else {
+            appendInfoBar(`Monster kills Hero with ${dealtDamage}`)
+            updateHeroStatsInInfoBar()
+        }
     }
 }
 
@@ -108,10 +134,31 @@ function drawMonster(monsterID) {
     }
 }
 
+
+
 function moveMonsters() {
     for (i = 0; i < monstersInLevel.length; i++) {
-        moveMonster(monstersInLevel[i])
+        let currentMonster = monstersInLevel[i]
+        moveMonster(currentMonster)
+        checkForPlayerProximity(currentMonster)
     }
+}
+
+function checkForPlayerProximity(whichMonster) {
+    let proximateInXAxis = (((playerCharacter.x / tileSize - whichMonster.x / tileSize) || (whichMonster.x / tileSize - playerCharacter.x / tileSize)) == (1 || 0 || -1))
+    let proximateInYAxis = (((playerCharacter.y / tileSize - whichMonster.y / tileSize) || (whichMonster.y / tileSize - playerCharacter.y / tileSize)) == (1 || 0 || -1))
+    console.log(proximateInXAxis)
+    console.log(proximateInYAxis)
+    // console.log((playerCharacter.x / tileSize - whichMonster.x / tileSize))
+    // console.log((playerCharacter.y / tileSize - whichMonster.y / tileSize))
+    // console.log((whichMonster.x / tileSize - playerCharacter.x / tileSize))
+    // console.log((whichMonster.y / tileSize - playerCharacter.y / tileSize))
+    // if ((((playerCharacter.x / tileSize - whichMonster.x / tileSize) (1 || 0 || -1)) ||
+    // (whichMonster.x / tileSize - playerCharacter.x / tileSize)) == (1 || 0 || -1))) &&
+    //  (((playerCharacter.y / tileSize - whichMonster.y / tileSize) == (1 || 0 || -1)) ||
+    //   (whichMonster.y / tileSize - playerCharacter.y / tileSize)) == (1 || 0 || -1))) {
+    //     fight(whichMonster)
+    // }
 }
 
 function moveMonster(monsterID) {
@@ -180,12 +227,18 @@ function level1() {
 
 }
 
-function startGame() {
+function init() {
     playerCharacter = new player(50, 50)
+    monstersInLevel = []
+    // state = unpaused
     loadInfobar()
     createMonsters(1)
     populateLevelMapWithCells()
     level1()
+}
+
+function startGame() {
+    init()
     drawBoard()
     document.onkeydown = function (e) {
         switch (e.keyCode) {
@@ -222,10 +275,68 @@ function loadInfobar() {
     let topDiv = document.getElementById("game-intro")
     topDiv.innerHTML = ""
     let heroStatsDiv = document.createElement('div')
+    heroStatsDiv.classList.add("heroStatsDiv")
     heroStatsDiv.innerText = `Health: ${playerCharacter.currentHealth}/${playerCharacter.maximumHealth}
-    Strength: ${playerCharacter.strength}
-            Armor: ${playerCharacter.armor}`
+    Damage: 1-${playerCharacter.damage}
+            Armor: ${playerCharacter.armor}            
+            Experience Points: ${playerCharacter.experiencePoints}`
     topDiv.appendChild(heroStatsDiv)
+}
+
+function updateHeroStatsInInfoBar() {
+    let topDiv = document.getElementsByClassName("heroStatsDiv")[0].innerText = `Health: ${playerCharacter.currentHealth}/${playerCharacter.maximumHealth}
+    Damage: 1-${playerCharacter.damage}
+            Armor: ${playerCharacter.armor}
+            Experience Points: ${playerCharacter.experiencePoints}`
+
+}
+
+function appendInfoBar(textForTheDiv) {
+    let divToAdd = document.createElement('div')
+    divToAdd.innerText = textForTheDiv
+    document.getElementById("game-intro").appendChild(divToAdd)
+}
+
+function appendWinButtonToInfoBar() {
+    let buttonToAdd = document.createElement('button')
+    buttonToAdd.innerText = "kk thx"
+    document.getElementById("game-intro").appendChild(buttonToAdd)
+    buttonToAdd.onclick = function () {
+        loadInfobar()
+    }
+}
+
+function appendLoseButtonToInfoBar() {
+    let buttonToAdd = document.createElement('button')
+    buttonToAdd.innerText = "RIP gg start new game"
+    document.getElementById("game-intro").appendChild(buttonToAdd)
+    buttonToAdd.onclick = function () {
+        startGame()
+    }
+}
+
+function assignLoot(MonsterID) {
+    return MonsterID.damage * 10
+}
+
+function fight(monsterID) {
+    appendInfoBar("FIGHT!!!!!!")
+    while (playerCharacter.currentHealth > 0 && monsterID.currentHealth > 0) {
+        playerCharacter.attack(monsterID)
+        if (monsterID.currentHealth > 0) {
+            monsterID.attack()
+        }
+    }
+    if (playerCharacter.currentHealth > 0) {
+        let XP = assignLoot(monsterID)
+        appendInfoBar(`Hero wins and gets ${XP} XP`)
+        playerCharacter.experiencePoints += XP
+        appendWinButtonToInfoBar()
+    }
+    else {
+        appendInfoBar(`REKT`)
+        appendLoseButtonToInfoBar()
+    }
 }
 
 
