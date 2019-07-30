@@ -1,7 +1,6 @@
 let gameCanvas
 let ctx
 let playerCharacter
-let monster1
 // mapSize = how many tiles the map square has
 let mapSize = 10;
 let tileSize = 25;
@@ -23,7 +22,7 @@ class player {
         this.maximumHealth = 100;
         this.currentHealth = 100;
         this.strength = 30;
-        this.armour = 8;
+        this.armor = 8;
         this.x = x;
         this.y = y;
     }
@@ -183,6 +182,7 @@ function level1() {
 
 function startGame() {
     playerCharacter = new player(50, 50)
+    loadInfobar()
     createMonsters(1)
     populateLevelMapWithCells()
     level1()
@@ -216,6 +216,16 @@ function startGame() {
         }
         moveMonsters()
     };
+}
+
+function loadInfobar() {
+    let topDiv = document.getElementById("game-intro")
+    topDiv.innerHTML = ""
+    let heroStatsDiv = document.createElement('div')
+    heroStatsDiv.innerText = `Health: ${playerCharacter.currentHealth}/${playerCharacter.maximumHealth}
+    Strength: ${playerCharacter.strength}
+            Armor: ${playerCharacter.armor}`
+    topDiv.appendChild(heroStatsDiv)
 }
 
 
