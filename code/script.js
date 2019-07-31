@@ -140,25 +140,30 @@ function moveMonsters() {
     for (i = 0; i < monstersInLevel.length; i++) {
         let currentMonster = monstersInLevel[i]
         moveMonster(currentMonster)
-        checkForPlayerProximity(currentMonster)
     }
 }
 
-function checkForPlayerProximity(whichMonster) {
-    let proximateInXAxis = (((playerCharacter.x / tileSize - whichMonster.x / tileSize) || (whichMonster.x / tileSize - playerCharacter.x / tileSize)) == (1 || 0 || -1))
-    let proximateInYAxis = (((playerCharacter.y / tileSize - whichMonster.y / tileSize) || (whichMonster.y / tileSize - playerCharacter.y / tileSize)) == (1 || 0 || -1))
-    console.log(proximateInXAxis)
-    console.log(proximateInYAxis)
-    // console.log((playerCharacter.x / tileSize - whichMonster.x / tileSize))
-    // console.log((playerCharacter.y / tileSize - whichMonster.y / tileSize))
-    // console.log((whichMonster.x / tileSize - playerCharacter.x / tileSize))
-    // console.log((whichMonster.y / tileSize - playerCharacter.y / tileSize))
-    // if ((((playerCharacter.x / tileSize - whichMonster.x / tileSize) (1 || 0 || -1)) ||
-    // (whichMonster.x / tileSize - playerCharacter.x / tileSize)) == (1 || 0 || -1))) &&
-    //  (((playerCharacter.y / tileSize - whichMonster.y / tileSize) == (1 || 0 || -1)) ||
-    //   (whichMonster.y / tileSize - playerCharacter.y / tileSize)) == (1 || 0 || -1))) {
-    //     fight(whichMonster)
-    // }
+function checkAllMonstersForProximity() {
+    for (i = 0; i < monstersInLevel.length; i++) {
+        let currentMonster = monstersInLevel[i]
+        if (checkForPlayerProximity(currentMonster, 1) == true) {
+
+            fight(currentMonster)
+        }
+    }
+}
+
+function checkForPlayerProximity(whichObject, numberOfTilesAroundObject) {
+    //checks whether "whichObject" is in a square centered around "whichObject" which sides are "numberOfTilesAroundObject" away from ""whichObject
+
+    // x1 is the x-value of the left border around the whichObject
+    let x1 = whichObject.x / tileSize - numberOfTilesAroundObject
+    let x2 = whichObject.x / tileSize + numberOfTilesAroundObject
+    let y1 = whichObject.y / tileSize - numberOfTilesAroundObject
+    let y2 = whichObject.y / tileSize + numberOfTilesAroundObject
+    if ((playerCharacter.x / tileSize >= x1 && playerCharacter.x / tileSize <= x2) && (playerCharacter.y / tileSize >= y1 && playerCharacter.y / tileSize <= y2)) {
+        return true
+    }
 }
 
 function moveMonster(monsterID) {
@@ -196,6 +201,7 @@ function drawBoard() {
     drawCells()
     drawPlayer()
     drawMonsters()
+    checkAllMonstersForProximity()
 }
 
 function level1() {
