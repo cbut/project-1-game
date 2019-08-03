@@ -8,10 +8,6 @@ let levelMap = []
 let whatLevelAreWeIn = 1
 let monstersInLevel = []
 let lootTable = []
-let levelExit = {
-    x: 0,
-    y: 0
-}
 let playerInventory = []
 let playerImg = new Image(50, 50)
 playerImg.src = './images/big_zombie_idle_anim_f0.png';
@@ -21,6 +17,8 @@ let exitImg = new Image(50, 50)
 exitImg.src = './images/doors_leaf_closed.png';
 let lootImg = new Image(50, 50)
 lootImg.src = './images/chest_empty_open_anim_f0.png';
+let levelExit
+
 
 class cell {
     constructor(x, y) {
@@ -86,21 +84,34 @@ class monster {
             updateHeroStatsInInfoBar()
         }
     }
+    draw() {
+        if (levelMap[this.x / tileSize][this.y / tileSize].visible) {
+            ctx.drawImage(monsterImg, (this.x), (this.y), tileSize, tileSize)
+        }
+    }
+
 }
 
 class stationaryObjectsWithLocation {
-    constructor(x, y) {
+    constructor(x, y, image) {
         this.x = x;
         this.y = y;
-        this.visible = false;
+        this.image = image;
     }
+    draw() {
+        if (levelMap[this.x / tileSize][this.y / tileSize].visible) {
+            ctx.drawImage(this.image, (this.x), this.y, tileSize, tileSize)
+        }
+    }
+
+
 }
 
 
 class exit extends stationaryObjectsWithLocation {
     // checkForPlayerProximity(whichObject, numberOfTilesAroundObject)
     constructor(x, y) {
-        super(x, y)
+        super(x, y, exitImg)
     }
 }
 
@@ -120,8 +131,9 @@ class armor {
 class loot extends stationaryObjectsWithLocation {
     // checkForPlayerProximity(whichObject, numberOfTilesAroundObject)
     constructor(x, y) {
-        super(x, y)
+        super(x, y, lootImg)
     }
+
 
     giveLoot(whatLevelAreWeIn) {
         if (Math.floor(Math.random() * 2) == 1) {
@@ -241,12 +253,13 @@ function generateLevelExit() {
     let position = generateAPositionOnMapWithoutWalls()
     levelExit.x = position[0] * tileSize
     levelExit.y = position[1] * tileSize
+    levelExit.visible = false;
 }
 
 function drawExit() {
-    // exitImg.onload = function () {
-    ctx.drawImage(exitImg, (levelExit.x), (levelExit.y), tileSize, tileSize)
-    // }
+    if (levelMap[levelExit.x / tileSize][levelExit.y / tileSize].visible) {
+        ctx.drawImage(exitImg, (levelExit.x), (levelExit.y), tileSize, tileSize)
+    }
 }
 
 function drawLoot() {
@@ -272,6 +285,7 @@ function checkIfNearExit() {
     let y1 = levelExit.y / tileSize
     if ((playerCharacter.x / tileSize == x1) && (playerCharacter.y / tileSize == y1)) {
         whatLevelAreWeIn += 1
+        monstersInLevel = []
         initLevel()
     }
 }
@@ -336,10 +350,10 @@ function drawBoard() {
     fogOfWar()
     drawCells()
 
-    drawLoot()
-    drawExit()
+    lootTable.forEach(loot => loot.draw())
+    levelExit.draw()
     checkIfNearExit()
-    drawMonsters()
+    monstersInLevel.forEach(monster => monster.draw())
     checkAllMonstersForProximity()
     drawPlayer()
 }
@@ -398,45 +412,50 @@ function level2() {
 
 function fogOfWar() {
     // all cells visible==false
-    for (i = 0; i < levelMap.length; i++) {
-        for (j = 0; j < levelMap.length; j++) {
-            levelMap[i][j].visible == false
-        }
-    }
+    // for (i = 0; i < levelMap.length; i++) {
+    //     for (j = 0; j < levelMap.length; j++) {
+    //         levelMap[i][j].visible == false
+    //     }
+    // }
+
     let testXLeft
     let testYUp
     let testXRight
     let testYDown
     // the visibiliy radius will search over the map array, so we have to exclude cases where it would try to access
     // tiles outside of the map like levelMap[-1][-2]
-    if (playerCharacter.x / tileSize - 2 < 0) {
+    if (playerCharacter.x / tileSize - 2 < 0 || playerCharacter.x / tileSize - 1 < 0) {
         testXLeft = 0
     } else {
         testXLeft = playerCharacter.x / tileSize - 2
     }
-    if (playerCharacter.x / tileSize + 2 > mapSize) {
+    if (playerCharacter.x / tileSize + 3 > mapSize || playerCharacter.x / tileSize + 2 > mapSize || playerCharacter.x / tileSize + 1 > mapSize) {
         testXRight = mapSize
     } else {
-        testXRight = playerCharacter.x / tileSize + 2
+        testXRight = playerCharacter.x / tileSize + 3
     }
-    if (playerCharacter.y / tileSize - 2 < 0) {
+    if (playerCharacter.y / tileSize - 2 < 0 || playerCharacter.y / tileSize - 1 < 0) {
         testYUp = 0
     } else {
         testYUp = playerCharacter.y / tileSize - 2
     }
-    if (playerCharacter.y / tileSize + 2 > mapSize) {
+    if (playerCharacter.y / tileSize + 3 > mapSize || playerCharacter.y / tileSize + 2 > mapSize || playerCharacter.y / tileSize + 2 > mapSize) {
         testYDown = mapSize
     } else {
-        testYDown = playerCharacter.y / tileSize + 2
+        testYDown = playerCharacter.y / tileSize + 3
     }
     // set visibility == true around the player
     for (i = (testXLeft); i < (testXRight); i++) {
         for (j = (testYUp); j < (testYDown); j++) {
 
             levelMap[i][j].visible = true
-        }
-    }
 
+        }
+
+    }
+    if (checkForPlayerProximity(levelExit, 2)) {
+        levelExit.visible = true
+    } else { levelExit.visible == false }
     // walls
 
     // but not behind walls
@@ -447,6 +466,7 @@ function initLevel() {
     monstersInLevel = []
     lootTable = []
     populateLevelMapWithCells()
+    levelExit = new exit
     if (whatLevelAreWeIn == 1) {
         level1()
     }
