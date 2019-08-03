@@ -333,9 +333,9 @@ function moveMonster(monsterID) {
 function drawBoard() {
     clearBoard()
 
+    fogOfWar()
     drawCells()
 
-    fogOfWar()
     drawLoot()
     drawExit()
     checkIfNearExit()
@@ -409,22 +409,22 @@ function fogOfWar() {
     let testYDown
     // the visibiliy radius will search over the map array, so we have to exclude cases where it would try to access
     // tiles outside of the map like levelMap[-1][-2]
-    if (playerCharacter.x / tileSize < 0) {
+    if (playerCharacter.x / tileSize - 2 < 0) {
         testXLeft = 0
     } else {
         testXLeft = playerCharacter.x / tileSize - 2
     }
-    if (playerCharacter.x / tileSize > mapSize) {
+    if (playerCharacter.x / tileSize + 2 > mapSize) {
         testXRight = mapSize
     } else {
         testXRight = playerCharacter.x / tileSize + 2
     }
-    if (playerCharacter.y / tileSize < 0) {
+    if (playerCharacter.y / tileSize - 2 < 0) {
         testYUp = 0
     } else {
         testYUp = playerCharacter.y / tileSize - 2
     }
-    if (playerCharacter.y / tileSize > mapSize) {
+    if (playerCharacter.y / tileSize + 2 > mapSize) {
         testYDown = mapSize
     } else {
         testYDown = playerCharacter.y / tileSize + 2
@@ -436,16 +436,6 @@ function fogOfWar() {
             levelMap[i][j].visible = true
         }
     }
-
-    // in a radius around the player
-    // if (playerCharacter.x - 2 >= 0) {
-    //     xLeft = playerCharacter.x - 2
-    // }else if (playerCharacter.x - 1 >= 0){
-    // xLeft = playerCharacter.x - 1}
-    // else {
-    //     xLeft = playerCharacter.x
-    // }
-
 
     // walls
 
@@ -466,9 +456,6 @@ function initLevel() {
     else {
         appendInfoBar("you won! you found the exit out of the dungeon!")
     }
-    populateLootTable(whatLevelAreWeIn)
-    generateLevelExit()
-    createMonsters(1)
     if (typeof playerCharacter == "undefined") {
         let position = generateAPositionOnMapWithoutWalls()
         playerCharacter = new player(position[0] * tileSize, position[1] * tileSize)
@@ -477,6 +464,16 @@ function initLevel() {
         playerCharacter.x = position[0] * tileSize
         playerCharacter.y = position[1] * tileSize
     }
+    for (i = 0; i < levelMap.length; i++) {
+        for (j = 0; j < levelMap.length; j++) {
+            levelMap[i][j].visible == false
+        }
+    }
+
+    populateLootTable(whatLevelAreWeIn)
+    generateLevelExit()
+    createMonsters(1)
+
     loadInfobar()
 }
 
