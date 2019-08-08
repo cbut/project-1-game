@@ -2,8 +2,8 @@ let gameCanvas
 let ctx
 let playerCharacter
 // mapSize = how many tiles the map square has
-let mapSize = 40;
-let tileSize = 20;
+let mapSize = 20;
+let tileSize = 25;
 let levelMap = []
 let whatLevelAreWeIn = 1
 let monstersInLevel = []
@@ -83,6 +83,12 @@ class player {
     moveDirection(horizontal, vertical) {
         this.x += horizontal;
         this.y += vertical;
+    }
+    draw() {
+
+        // playerImg.onload = function () {
+        ctx.drawImage(playerImg, (this.x), (this.y), tileSize, tileSize)
+        // }
     }
 
     attack(enemy) {
@@ -258,12 +264,7 @@ function clearBoard() {
     ctx.fillRect(0, 0, 500, 500)
 }
 
-function drawPlayer() {
 
-    // playerImg.onload = function () {
-    ctx.drawImage(playerImg, (playerCharacter.x), (playerCharacter.y), tileSize, tileSize)
-    // }
-}
 function drawMonsters() {
     if (monstersInLevel.length != 0) {
         for (i = 0; i < monstersInLevel.length; i++) {
@@ -417,111 +418,9 @@ function drawBoard() {
     checkIfNearExit()
     monstersInLevel.forEach(monster => monster.draw())
     checkAllMonstersForProximity()
-    drawPlayer()
+    playerCharacter.draw()
 }
 
-function level1() {
-    levelMap[1][1].isPlayerInCell = true
-    levelMap[1][1].wall = false
-    levelMap[1][2].wall = false
-    levelMap[1][3].wall = false
-    levelMap[2][1].wall = false
-    levelMap[2][2].wall = false
-    levelMap[2][3].wall = false
-    levelMap[2][4].wall = false
-    levelMap[2][5].wall = false
-    levelMap[3][5].wall = false
-    levelMap[4][5].wall = false
-    levelMap[4][6].wall = false
-    levelMap[4][7].wall = false
-    levelMap[4][8].wall = false
-    levelMap[5][6].wall = false
-    levelMap[5][7].wall = false
-    levelMap[5][8].wall = false
-    levelMap[6][6].wall = false
-    levelMap[6][8].wall = false
-    levelMap[6][7].wall = false
-    levelMap[7][6].wall = false
-    levelMap[7][8].wall = false
-    levelMap[7][7].wall = false
-}
-
-function level2() {
-    levelMap[3][3].isPlayerInCell = true
-    levelMap[3][3].wall = false
-    levelMap[3][4].wall = false
-    levelMap[3][3].wall = false
-    levelMap[4][3].wall = false
-    levelMap[4][4].wall = false
-    levelMap[4][3].wall = false
-    levelMap[4][4].wall = false
-    levelMap[4][5].wall = false
-    levelMap[3][5].wall = false
-    levelMap[4][5].wall = false
-    levelMap[4][6].wall = false
-    levelMap[4][7].wall = false
-    levelMap[4][8].wall = false
-    levelMap[5][6].wall = false
-    levelMap[5][5].wall = false
-    levelMap[5][8].wall = false
-    levelMap[6][6].wall = false
-    levelMap[6][8].wall = false
-    levelMap[6][5].wall = false
-    levelMap[5][6].wall = false
-    levelMap[5][8].wall = false
-    levelMap[5][5].wall = false
-}
-
-function level3() {
-    levelMap[3][3].isPlayerInCell = true
-    levelMap[3][3].wall = false
-    levelMap[3][4].wall = false
-    levelMap[3][3].wall = false
-    levelMap[4][3].wall = false
-    levelMap[4][4].wall = false
-    levelMap[4][3].wall = false
-    levelMap[4][4].wall = false
-    levelMap[4][5].wall = false
-    levelMap[3][5].wall = false
-    levelMap[4][5].wall = false
-    levelMap[4][6].wall = false
-    levelMap[4][7].wall = false
-    levelMap[4][8].wall = false
-    levelMap[5][6].wall = false
-    levelMap[5][5].wall = false
-    levelMap[5][8].wall = false
-    levelMap[6][6].wall = false
-    levelMap[6][8].wall = false
-    levelMap[6][5].wall = false
-    levelMap[5][6].wall = false
-    levelMap[5][8].wall = false
-    levelMap[5][5].wall = false
-}
-function level4() {
-    levelMap[3][3].isPlayerInCell = true
-    levelMap[3][3].wall = false
-    levelMap[3][4].wall = false
-    levelMap[3][3].wall = false
-    levelMap[4][3].wall = false
-    levelMap[4][4].wall = false
-    levelMap[4][3].wall = false
-    levelMap[4][4].wall = false
-    levelMap[4][5].wall = false
-    levelMap[3][5].wall = false
-    levelMap[4][5].wall = false
-    levelMap[4][6].wall = false
-    levelMap[4][7].wall = false
-    levelMap[4][8].wall = false
-    levelMap[5][6].wall = false
-    levelMap[5][5].wall = false
-    levelMap[5][8].wall = false
-    levelMap[6][6].wall = false
-    levelMap[6][8].wall = false
-    levelMap[6][5].wall = false
-    levelMap[5][6].wall = false
-    levelMap[5][8].wall = false
-    levelMap[5][5].wall = false
-}
 function fogOfWar() {
     // all cells visible==false
     // for (i = 0; i < levelMap.length; i++) {
@@ -575,12 +474,13 @@ function fogOfWar() {
 }
 
 function initLevel() {
+    pause = false
     monstersInLevel = []
     lootTable = []
     populateLevelMapWithCells()
     levelExit = new exit
     if (whatLevelAreWeIn == 1) {
-        level1()
+        genLevel()
     }
     else if (whatLevelAreWeIn == 2) {
         level2()
@@ -605,7 +505,7 @@ function initLevel() {
     }
     for (i = 0; i < levelMap.length; i++) {
         for (j = 0; j < levelMap.length; j++) {
-            levelMap[i][j].visible == false
+            levelMap[i][j].visible = false
         }
     }
 
@@ -616,6 +516,22 @@ function initLevel() {
     loadInfobar()
 }
 
+function genLevel() {
+    const level = level1Map
+
+    const rows = level.split('\n').map(row => row.split(''));
+    console.log(rows); 4
+    for (i = 0; i < mapSize; i++) {
+        for (j = 0; j < mapSize; j++) {
+            if (rows[i][j] == 'W') {
+                levelMap[i][j].wall = true
+            } else if (rows[i][j] == 'S') {
+                levelMap[i][j].wall = false
+            }
+        }
+
+    }
+}
 
 function startGame() {
     initLevel()
@@ -738,8 +654,8 @@ function fight(monsterID) {
         }
     }
     if (playerCharacter.currentHealth > 0) {
-        removeDeadMonstersFromGame(monsterID)
         let XP = getXPAfterFight(monsterID)
+        removeDeadMonstersFromGame(monsterID)
         appendInfoBar(`Hero wins and gets ${XP} XP`)
         playerCharacter.experiencePoints += XP
         updateHeroStatsInInfoBar()
@@ -761,3 +677,28 @@ window.onload = function () {
     };
 
 };
+
+//helperfunction to generate rooms i can manually select to hardcode the levels
+function generateMeSomeRooms() {
+    let randomStartX = Math.floor(Math.random() * 15 + 1)
+    let randomEndX = randomStartX + Math.floor(Math.random() * 3 + 2)
+    let randomStartY = Math.floor(Math.random() * 15 + 1)
+    let randomEndY = randomStartY + Math.floor(Math.random() * 3 + 2)
+    for (i = randomStartX; i < (randomEndX); i++) {
+        for (j = randomStartY; j < randomEndY; j++) {
+            console.log(`levelMap[${i}][${j}].wall = false`)
+        }
+    }
+}
+
+// turns fog of war off for debugging reasons
+function turnFOWOff() {
+    for (i = 0; i < levelMap.length; i++) {
+        for (j = 0; j < levelMap.length; j++) {
+            let location = levelMap[i][j]
+            location.visible = true
+            location.draw()
+        }
+    }
+    drawBoard()
+}
