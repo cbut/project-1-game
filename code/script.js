@@ -8,7 +8,6 @@ let levelMap = []
 let whatLevelAreWeIn = 1
 let monstersInLevel = []
 let lootTable = []
-let playerInventory = []
 let playerImg = new Image(50, 50)
 playerImg.src = './images/big_zombie_idle_anim_f0.png';
 let monsterImg = new Image(50, 50)
@@ -17,7 +16,18 @@ let exitImg = new Image(50, 50)
 exitImg.src = './images/doors_leaf_closed.png';
 let lootImg = new Image(50, 50)
 lootImg.src = './images/chest_empty_open_anim_f0.png';
+let floorImg = new Image(50, 50)
+floorImg.src = './images/stonefloor.png'
+let lavaWallImg = new Image(50, 50)
+lavaWallImg.src = './images/lavarocks.png'
+let fireWallImg = new Image(50, 50)
+fireWallImg.src = './images/75810180-abstract-blaze-fire-flame-texture-background.jpg'
+let iceWallImg = new Image(50, 50)
+iceWallImg.src = './images/ice texture.jpg'
+chaosWallImg = new Image(50, 50)
+chaosWallImg.src = './images/butterflies.jpg'
 let levelExit
+let pause = false
 
 
 class cell {
@@ -28,6 +38,31 @@ class cell {
         this.width = tileSize;
         this.wall = true;
         this.visible = false;
+    }
+    draw() {
+        if (this.visible == true) {
+            if (this.wall == true) {
+                if (whatLevelAreWeIn == 1) {
+                    ctx.drawImage(lavaWallImg, this.x, this.y, tileSize, tileSize)
+                }
+                else if (whatLevelAreWeIn == 2) {
+                    ctx.drawImage(iceWallImg, this.x, this.y, tileSize, tileSize)
+                }
+                else if (whatLevelAreWeIn == 3) {
+                    ctx.drawImage(fireWallImg, this.x, this.y, tileSize, tileSize)
+                }
+                else {
+                    ctx.drawImage(chaosWallImg, this.x, this.y, tileSize, tileSize)
+                }
+            }
+            else {
+                // ctx.fillStyle = "grey"
+                ctx.drawImage(floorImg, this.x, this.y, tileSize, tileSize)
+                // ctx.fillRect(location.x, location.y, tileSize, location.width)
+                // ctx.fillStyle = "black"
+            }
+
+        }
     }
 }
 
@@ -40,6 +75,10 @@ class player {
         this.experiencePoints = 0;
         this.x = x;
         this.y = y;
+        this.weaponDamageAdded = 0
+        this.armorAdded = 0
+        this.healthPotion = 0
+        this.hasKey = false
     }
     moveDirection(horizontal, vertical) {
         this.x += horizontal;
@@ -47,7 +86,7 @@ class player {
     }
 
     attack(enemy) {
-        let dealtDamage = Math.floor(Math.random() * playerCharacter.damage) - enemy.armor
+        let dealtDamage = Math.floor(Math.random() * (playerCharacter.damage + playerCharacter.weaponDamageAdded)) - enemy.armor
         if (dealtDamage <= 0) { dealtDamage = 0 }
         enemy.currentHealth -= dealtDamage
         if (enemy.currentHealth > 0) {
@@ -73,7 +112,7 @@ class monster {
         this.y += vertical;
     }
     attack() {
-        let dealtDamage = Math.floor(Math.random() * this.damage) - playerCharacter.armor
+        let dealtDamage = Math.floor(Math.random() * this.damage) - playerCharacter.armor - playerCharacter.armorAdded
         if (dealtDamage <= 0) { dealtDamage = 0 }
         playerCharacter.currentHealth -= dealtDamage
         if (playerCharacter.currentHealth > 0) {
@@ -97,14 +136,15 @@ class stationaryObjectsWithLocation {
         this.x = x;
         this.y = y;
         this.image = image;
+        this.inGame = true;
     }
     draw() {
-        if (levelMap[this.x / tileSize][this.y / tileSize].visible) {
-            ctx.drawImage(this.image, (this.x), this.y, tileSize, tileSize)
+        if (this.inGame == true) {
+            if (levelMap[this.x / tileSize][this.y / tileSize].visible) {
+                ctx.drawImage(this.image, (this.x), this.y, tileSize, tileSize)
+            }
         }
     }
-
-
 }
 
 
@@ -116,39 +156,65 @@ class exit extends stationaryObjectsWithLocation {
 }
 
 
-class weapons {
-    constructor(whatLevelAreWeIn) {
-        this.addedDamage = Math.floor(Math.random() * whatLevelAreWeIn)
-    }
-}
 
-class armor {
-    constructor(whatLevelAreWeIn) {
-        this.addedArmor = Math.floor(Math.random() * whatLevelAreWeIn)
-    }
-}
 
 class loot extends stationaryObjectsWithLocation {
     // checkForPlayerProximity(whichObject, numberOfTilesAroundObject)
     constructor(x, y) {
         super(x, y, lootImg)
     }
-
-
     giveLoot(whatLevelAreWeIn) {
         if (Math.floor(Math.random() * 2) == 1) {
-            return new armor(whatLevelAreWeIn)
+            let armorVariable = 1 + Math.floor(Math.random() * whatLevelAreWeIn)
+            if (armorVariable > playerCharacter.armorAdded) {
+                playerCharacter.armorAdded = armorVariable
+            }
+            loadInfobar()
+            appendInfoBar(`You found armor +${armorVariable}!`)
         }
         else {
-            return new weapon(whatLevelAreWeIn)
+            let weaponVariable = 1 + Math.floor(Math.random() * whatLevelAreWeIn)
+            console.log(weaponVariable + '>' + playerCharacter.weaponDamageAdded)
+            if (weaponVariable > playerCharacter.weaponDamageAdded) {
+                console.log('weapon if clause engaged')
+                playerCharacter.weaponDamageAdded = weaponVariable
+            }
+            loadInfobar()
+            appendInfoBar(`You found a weapon + ${weaponVariable}!`)
         }
+    }
 
+    checkIfNearPlayer() {
+        if (this.inGame == true) {
+            let x1 = this.x / tileSize
+            let y1 = this.y / tileSize
+            if ((playerCharacter.x / tileSize == x1) && (playerCharacter.y / tileSize == y1)) {
+                this.giveLoot(whatLevelAreWeIn)
+                this.inGame = false
+
+            }
+        }
     }
 }
 
+class keyChest extends stationaryObjectsWithLocation {
+    constructor(x, y) {
+        super(x, y, lootImg)
+    }
 
 
-
+    checkIfNearPlayer() {
+        let x1 = this.x / tileSize
+        let y1 = this.y / tileSize
+        if (this.inGame == true) {
+            if ((playerCharacter.x / tileSize == x1) && (playerCharacter.y / tileSize == y1)) {
+                playerCharacter.hasKey = true
+                appendInfoBar('You have found a key!')
+                this.inGame = false
+            }
+        }
+    }
+}
 
 function populateLevelMapWithCells(level) {
     for (i = 0; i < mapSize; i++) {
@@ -164,6 +230,9 @@ function populateLootTable(level) {
     let position = generateAPositionOnMapWithoutWalls()
     let loot1 = new loot(position[0] * tileSize, position[1] * tileSize)
     lootTable.push(loot1)
+    position = generateAPositionOnMapWithoutWalls()
+    let keyChest1 = new keyChest(position[0] * tileSize, position[1] * tileSize)
+    lootTable.push(keyChest1)
 }
 
 function createMonsters(howMany) {
@@ -179,22 +248,7 @@ function createMonsters(howMany) {
 function drawCells() {
     for (i = 0; i < levelMap.length; i++) {
         for (j = 0; j < levelMap.length; j++) {
-            let location = levelMap[i][j]
-            ctx.fillStyle = "black"
-            ctx.fillRect(location.x, location.y, location.heigth, location.width)
-            if (location.visible == true) {
-                if (location.wall == true) {
-                    ctx.fillStyle = "DarkGrey"
-                    ctx.fillRect(location.x, location.y, location.heigth, location.width)
-                    ctx.fillStyle = "black"
-                }
-                else {
-                    ctx.fillStyle = "grey"
-                    ctx.fillRect(location.x, location.y, location.heigth, location.width)
-                    ctx.fillStyle = "black"
-                }
-
-            }
+            levelMap[i][j].draw()
         }
     }
 }
@@ -284,11 +338,18 @@ function checkIfNearExit() {
     let x1 = levelExit.x / tileSize
     let y1 = levelExit.y / tileSize
     if ((playerCharacter.x / tileSize == x1) && (playerCharacter.y / tileSize == y1)) {
-        whatLevelAreWeIn += 1
-        monstersInLevel = []
-        initLevel()
+        if (playerCharacter.hasKey == true) {
+            whatLevelAreWeIn += 1
+            monstersInLevel = []
+            initLevel()
+        }
+        else {
+            loadInfobar()
+            appendInfoBar('you need a key')
+        }
     }
 }
+
 
 // proximity check is called every time the board is redrawn, for example after hero or monster moved, in order to initiate fights
 function checkAllMonstersForProximity() {
@@ -351,6 +412,7 @@ function drawBoard() {
     drawCells()
 
     lootTable.forEach(loot => loot.draw())
+    lootTable.forEach(loot => loot.checkIfNearPlayer())
     levelExit.draw()
     checkIfNearExit()
     monstersInLevel.forEach(monster => monster.draw())
@@ -410,6 +472,56 @@ function level2() {
     levelMap[5][5].wall = false
 }
 
+function level3() {
+    levelMap[3][3].isPlayerInCell = true
+    levelMap[3][3].wall = false
+    levelMap[3][4].wall = false
+    levelMap[3][3].wall = false
+    levelMap[4][3].wall = false
+    levelMap[4][4].wall = false
+    levelMap[4][3].wall = false
+    levelMap[4][4].wall = false
+    levelMap[4][5].wall = false
+    levelMap[3][5].wall = false
+    levelMap[4][5].wall = false
+    levelMap[4][6].wall = false
+    levelMap[4][7].wall = false
+    levelMap[4][8].wall = false
+    levelMap[5][6].wall = false
+    levelMap[5][5].wall = false
+    levelMap[5][8].wall = false
+    levelMap[6][6].wall = false
+    levelMap[6][8].wall = false
+    levelMap[6][5].wall = false
+    levelMap[5][6].wall = false
+    levelMap[5][8].wall = false
+    levelMap[5][5].wall = false
+}
+function level4() {
+    levelMap[3][3].isPlayerInCell = true
+    levelMap[3][3].wall = false
+    levelMap[3][4].wall = false
+    levelMap[3][3].wall = false
+    levelMap[4][3].wall = false
+    levelMap[4][4].wall = false
+    levelMap[4][3].wall = false
+    levelMap[4][4].wall = false
+    levelMap[4][5].wall = false
+    levelMap[3][5].wall = false
+    levelMap[4][5].wall = false
+    levelMap[4][6].wall = false
+    levelMap[4][7].wall = false
+    levelMap[4][8].wall = false
+    levelMap[5][6].wall = false
+    levelMap[5][5].wall = false
+    levelMap[5][8].wall = false
+    levelMap[6][6].wall = false
+    levelMap[6][8].wall = false
+    levelMap[6][5].wall = false
+    levelMap[5][6].wall = false
+    levelMap[5][8].wall = false
+    levelMap[5][5].wall = false
+}
 function fogOfWar() {
     // all cells visible==false
     // for (i = 0; i < levelMap.length; i++) {
@@ -473,6 +585,12 @@ function initLevel() {
     else if (whatLevelAreWeIn == 2) {
         level2()
     }
+    else if (whatLevelAreWeIn == 3) {
+        level3()
+    }
+    else if (whatLevelAreWeIn == 4) {
+        level4()
+    }
     else {
         appendInfoBar("you won! you found the exit out of the dungeon!")
     }
@@ -483,6 +601,7 @@ function initLevel() {
         let position = generateAPositionOnMapWithoutWalls()
         playerCharacter.x = position[0] * tileSize
         playerCharacter.y = position[1] * tileSize
+        playerCharacter.hasKey = false
     }
     for (i = 0; i < levelMap.length; i++) {
         for (j = 0; j < levelMap.length; j++) {
@@ -502,33 +621,35 @@ function startGame() {
     initLevel()
     drawBoard()
     document.onkeydown = function (e) {
-        switch (e.keyCode) {
-            case 38: // up arrow
-                if (levelMap[playerCharacter.x / tileSize][playerCharacter.y / tileSize - 1].wall == false) {
-                    playerCharacter.moveDirection(0, -(tileSize))
-                }
-                drawBoard()
-                break;
-            case 40: // down arrow
-                if (levelMap[playerCharacter.x / tileSize][playerCharacter.y / tileSize + 1].wall == false) {
-                    playerCharacter.moveDirection(0, tileSize)
-                }
-                drawBoard()
-                break;
-            case 37: // left arrow
-                if (levelMap[playerCharacter.x / tileSize - 1][playerCharacter.y / tileSize].wall == false) {
-                    playerCharacter.moveDirection(-(tileSize), 0)
-                }
-                drawBoard()
-                break;
-            case 39: // right arrow
-                if (levelMap[playerCharacter.x / tileSize + 1][playerCharacter.y / tileSize].wall == false) {
-                    playerCharacter.moveDirection(tileSize, 0)
-                }
-                drawBoard()
-                break;
+        if (pause == false) {
+            switch (e.keyCode) {
+                case 38: // up arrow
+                    if (levelMap[playerCharacter.x / tileSize][playerCharacter.y / tileSize - 1].wall == false) {
+                        playerCharacter.moveDirection(0, -(tileSize))
+                    }
+                    drawBoard()
+                    break;
+                case 40: // down arrow
+                    if (levelMap[playerCharacter.x / tileSize][playerCharacter.y / tileSize + 1].wall == false) {
+                        playerCharacter.moveDirection(0, tileSize)
+                    }
+                    drawBoard()
+                    break;
+                case 37: // left arrow
+                    if (levelMap[playerCharacter.x / tileSize - 1][playerCharacter.y / tileSize].wall == false) {
+                        playerCharacter.moveDirection(-(tileSize), 0)
+                    }
+                    drawBoard()
+                    break;
+                case 39: // right arrow
+                    if (levelMap[playerCharacter.x / tileSize + 1][playerCharacter.y / tileSize].wall == false) {
+                        playerCharacter.moveDirection(tileSize, 0)
+                    }
+                    drawBoard()
+                    break;
+            }
+            moveMonsters()
         }
-        moveMonsters()
     };
 }
 
@@ -538,16 +659,31 @@ function loadInfobar() {
     let heroStatsDiv = document.createElement('div')
     heroStatsDiv.classList.add("heroStatsDiv")
     heroStatsDiv.innerText = `Health: ${playerCharacter.currentHealth}/${playerCharacter.maximumHealth}
-    Damage: 1-${playerCharacter.damage}
-            Armor: ${playerCharacter.armor}            
+    Damage: 1-${playerCharacter.damage} + ${playerCharacter.weaponDamageAdded}
+            Armor: ${playerCharacter.armor} + ${playerCharacter.armorAdded}           
             Experience Points: ${playerCharacter.experiencePoints}`
     topDiv.appendChild(heroStatsDiv)
+    let weaponDiv = document.createElement('div')
+    if (playerCharacter.weaponDamageAdded == 0) {
+        weaponDiv.innerText = `Weapon: none`
+    } else {
+        weaponDiv.innerText = `Weapon: + ${playerCharacter.weaponDamageAdded}`
+    }
+    topDiv.appendChild(weaponDiv)
+    let armorDiv = document.createElement('div')
+    if (playerCharacter.armorAdded == 0) {
+        armorDiv.innerText = `Armor: none`
+    } else {
+        armorDiv.innerText = `Armor: + ${playerCharacter.armorAdded}`
+    }
+    topDiv.appendChild(armorDiv)
 }
+
 
 function updateHeroStatsInInfoBar() {
     let topDiv = document.getElementsByClassName("heroStatsDiv")[0].innerText = `Health: ${playerCharacter.currentHealth}/${playerCharacter.maximumHealth}
-    Damage: 1-${playerCharacter.damage}
-            Armor: ${playerCharacter.armor}
+    Damage: 1-${playerCharacter.damage} + ${playerCharacter.weaponDamageAdded}
+            Armor: ${playerCharacter.armor} + ${playerCharacter.armorAdded}           
             Experience Points: ${playerCharacter.experiencePoints}`
 
 }
@@ -565,6 +701,7 @@ function appendWinButtonToInfoBar() {
     document.getElementById("game-intro").appendChild(buttonToAdd)
     buttonToAdd.onclick = function () {
         loadInfobar()
+        pause = false
     }
 }
 
@@ -589,11 +726,10 @@ function getXPAfterFight(MonsterID) {
     return MonsterID.damage * 10
 }
 
-function getLoot(level) {
 
-}
 
 function fight(monsterID) {
+    pause = true
     appendInfoBar("FIGHT!!!!!!")
     while (playerCharacter.currentHealth > 0 && monsterID.currentHealth > 0) {
         playerCharacter.attack(monsterID)
