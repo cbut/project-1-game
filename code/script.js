@@ -250,10 +250,16 @@ function populateLootTable(level) {
 }
 
 function createMonsters(howMany) {
-    for (i = 0; i < (howMany); i++) {
+    console.log(howMany)
+    for (a = 0; a < (howMany); a++) {
+        console.log(a)
+        console.log(howMany)
         let position = generateAPositionOnMapWithoutWalls()
         let monsterVariable = new monster(position[0] * tileSize, position[1] * tileSize)
         console.log("one monster created")
+        console.log(a)
+        console.log(howMany)
+
         monstersInLevel.push(monsterVariable)
     }
 }
@@ -293,7 +299,6 @@ function generateAPositionOnMapWithoutWalls() {
             let location = levelMap[i][j]
             let posX = i
             let posY = j
-            console.log
             if (location.wall == false) {
                 helperArray.push({ x: i, y: j })
             }
@@ -543,7 +548,6 @@ function genLevel() {
     }
 
     const rows = level.split('\n').map(row => row.split(''));
-    console.log(rows); 4
     for (i = 0; i < mapSize; i++) {
         for (j = 0; j < mapSize; j++) {
             if (rows[i][j] == 'W') {
