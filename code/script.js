@@ -68,10 +68,11 @@ class cell {
 
 class player {
     constructor(x, y) {
-        this.maximumHealth = 50;
-        this.currentHealth = 50;
+        this.maximumHealth = 25;
+        this.currentHealth = 25;
         this.damage = 10;
         this.armor = 4;
+        this.healingPotions = 0
         this.experiencePoints = 0;
         this.x = x;
         this.y = y;
@@ -79,6 +80,7 @@ class player {
         this.armorAdded = 0
         this.healthPotion = 0
         this.hasKey = false
+        this.level = 0
     }
     moveDirection(horizontal, vertical) {
         this.x += horizontal;
@@ -89,6 +91,12 @@ class player {
         // playerImg.onload = function () {
         ctx.drawImage(playerImg, (this.x), (this.y), tileSize, tileSize)
         // }
+    }
+    levelUp() {
+        this.level++
+        this.maximumHealth += Math.floor(Math.random() * 10)
+        this.currentHealth = this.maximumHealth
+        appendInfoBar(`LevelUp! Hero is now Level ${this.level}`)
     }
 
     attack(enemy) {
@@ -242,9 +250,10 @@ function populateLootTable(level) {
 }
 
 function createMonsters(howMany) {
-    for (i = 0; i < howMany; i++) {
+    for (i = 0; i < (howMany); i++) {
         let position = generateAPositionOnMapWithoutWalls()
         let monsterVariable = new monster(position[0] * tileSize, position[1] * tileSize)
+        console.log("one monster created")
         monstersInLevel.push(monsterVariable)
     }
 }
@@ -406,6 +415,16 @@ function moveMonster(monsterID) {
     }
 }
 
+function checkForLevelUp() {
+    if (playerCharacter.experiencePoints >= 150 && playerCharacter.level < 1) {
+        playerCharacter.levelUp()
+    }
+    else if (playerCharacter.experiencePoints >= 250 && playerCharacter.level < 2) {
+        playerCharacter.levelUp()
+    }
+    updateHeroStatsInInfoBar()
+}
+
 function drawBoard() {
     clearBoard()
 
@@ -418,6 +437,7 @@ function drawBoard() {
     checkIfNearExit()
     monstersInLevel.forEach(monster => monster.draw())
     checkAllMonstersForProximity()
+    checkForLevelUp()
     playerCharacter.draw()
 }
 
@@ -479,20 +499,11 @@ function initLevel() {
     lootTable = []
     populateLevelMapWithCells()
     levelExit = new exit
-    if (whatLevelAreWeIn == 1) {
-        genLevel()
-    }
-    else if (whatLevelAreWeIn == 2) {
-        level2()
-    }
-    else if (whatLevelAreWeIn == 3) {
-        level3()
-    }
-    else if (whatLevelAreWeIn == 4) {
-        level4()
+    if (whatLevelAreWeIn == 5) {
+        appendInfoBar("you won! you found the exit out of the dungeon!")
     }
     else {
-        appendInfoBar("you won! you found the exit out of the dungeon!")
+        genLevel()
     }
     if (typeof playerCharacter == "undefined") {
         let position = generateAPositionOnMapWithoutWalls()
@@ -511,13 +522,25 @@ function initLevel() {
 
     populateLootTable(whatLevelAreWeIn)
     generateLevelExit()
-    createMonsters(1)
+    createMonsters(3)
 
     loadInfobar()
 }
 
 function genLevel() {
-    const level = level1Map
+    let level
+    if (whatLevelAreWeIn == 1) {
+        level = level1Map
+    }
+    else if (whatLevelAreWeIn == 2) {
+        level = level2Map
+    }
+    else if (whatLevelAreWeIn == 3) {
+        level = level3Map
+    }
+    else if (whatLevelAreWeIn == 4) {
+        level = level4Map
+    }
 
     const rows = level.split('\n').map(row => row.split(''));
     console.log(rows); 4
@@ -658,6 +681,7 @@ function fight(monsterID) {
         removeDeadMonstersFromGame(monsterID)
         appendInfoBar(`Hero wins and gets ${XP} XP`)
         playerCharacter.experiencePoints += XP
+        checkForLevelUp()
         updateHeroStatsInInfoBar()
         appendWinButtonToInfoBar()
         drawBoard()
@@ -677,19 +701,6 @@ window.onload = function () {
     };
 
 };
-
-//helperfunction to generate rooms i can manually select to hardcode the levels
-function generateMeSomeRooms() {
-    let randomStartX = Math.floor(Math.random() * 15 + 1)
-    let randomEndX = randomStartX + Math.floor(Math.random() * 3 + 2)
-    let randomStartY = Math.floor(Math.random() * 15 + 1)
-    let randomEndY = randomStartY + Math.floor(Math.random() * 3 + 2)
-    for (i = randomStartX; i < (randomEndX); i++) {
-        for (j = randomStartY; j < randomEndY; j++) {
-            console.log(`levelMap[${i}][${j}].wall = false`)
-        }
-    }
-}
 
 // turns fog of war off for debugging reasons
 function turnFOWOff() {
