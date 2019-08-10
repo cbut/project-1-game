@@ -68,8 +68,8 @@ class cell {
 
 class player {
     constructor(x, y) {
-        this.maximumHealth = 25;
-        this.currentHealth = 25;
+        this.maximumHealth = 20;
+        this.currentHealth = 20;
         this.damage = 10;
         this.armor = 4;
         this.healingPotions = 0
@@ -97,6 +97,15 @@ class player {
         this.maximumHealth += Math.floor(Math.random() * 10)
         this.currentHealth = this.maximumHealth
         appendInfoBar(`LevelUp! Hero is now Level ${this.level}`)
+    }
+
+    useHealthPotionIfInDanger() {
+        if (((this.currentHealth / this.maximumHealth * 100) < 25) && (this.healingPotions > 0)) {
+            this.healingPotions--
+            let healthRecovered = Math.floor(Math.random() * 8)
+            appendInfoBar(`You managed to drink a health potion for ${healthRecovered} hit points when your health dropped to ${this.currentHealth}`)
+            this.currentHealth += healthRecovered
+        }
     }
 
     attack(enemy) {
@@ -178,7 +187,7 @@ class loot extends stationaryObjectsWithLocation {
         super(x, y, lootImg)
     }
     giveLoot(whatLevelAreWeIn) {
-        if (Math.floor(Math.random() * 2) == 1) {
+        if (Math.floor(Math.random() * 3) == 1) {
             let armorVariable = 1 + Math.floor(Math.random() * whatLevelAreWeIn)
             if (armorVariable > playerCharacter.armorAdded) {
                 playerCharacter.armorAdded = armorVariable
@@ -186,15 +195,19 @@ class loot extends stationaryObjectsWithLocation {
             loadInfobar()
             appendInfoBar(`You found armor +${armorVariable}!`)
         }
-        else {
+        else if ((Math.floor(Math.random() * 3) == 2)) {
             let weaponVariable = 1 + Math.floor(Math.random() * whatLevelAreWeIn)
             console.log(weaponVariable + '>' + playerCharacter.weaponDamageAdded)
             if (weaponVariable > playerCharacter.weaponDamageAdded) {
-                console.log('weapon if clause engaged')
                 playerCharacter.weaponDamageAdded = weaponVariable
             }
             loadInfobar()
             appendInfoBar(`You found a weapon + ${weaponVariable}!`)
+        }
+        else {
+            playerCharacter.healingPotions++
+            loadInfobar()
+            appendInfoBar(`You found a health potion!`)
         }
     }
 
@@ -231,9 +244,9 @@ class keyChest extends stationaryObjectsWithLocation {
 }
 
 function populateLevelMapWithCells(level) {
-    for (i = 0; i < mapSize; i++) {
+    for (let i = 0; i < mapSize; i++) {
         levelMap[i] = new Array()
-        for (j = 0; j < mapSize; j++) {
+        for (let j = 0; j < mapSize; j++) {
             cellObject = new cell((i * tileSize), (j * tileSize))
             levelMap[i].push(cellObject)
         }
@@ -241,9 +254,11 @@ function populateLevelMapWithCells(level) {
 }
 
 function populateLootTable(level) {
-    let position = generateAPositionOnMapWithoutWalls()
-    let loot1 = new loot(position[0] * tileSize, position[1] * tileSize)
-    lootTable.push(loot1)
+    for (let i = 0; i < 2; i++) {
+        let position = generateAPositionOnMapWithoutWalls()
+        let loot1 = new loot(position[0] * tileSize, position[1] * tileSize)
+        lootTable.push(loot1)
+    }
     position = generateAPositionOnMapWithoutWalls()
     let keyChest1 = new keyChest(position[0] * tileSize, position[1] * tileSize)
     lootTable.push(keyChest1)
@@ -251,7 +266,7 @@ function populateLootTable(level) {
 
 function createMonsters(howMany) {
     console.log(howMany)
-    for (a = 0; a < (howMany); a++) {
+    for (let a = 0; a < (howMany); a++) {
         console.log(a)
         console.log(howMany)
         let position = generateAPositionOnMapWithoutWalls()
@@ -267,8 +282,8 @@ function createMonsters(howMany) {
 
 
 function drawCells() {
-    for (i = 0; i < levelMap.length; i++) {
-        for (j = 0; j < levelMap.length; j++) {
+    for (let i = 0; i < levelMap.length; i++) {
+        for (let j = 0; j < levelMap.length; j++) {
             levelMap[i][j].draw()
         }
     }
@@ -282,7 +297,7 @@ function clearBoard() {
 
 function drawMonsters() {
     if (monstersInLevel.length != 0) {
-        for (i = 0; i < monstersInLevel.length; i++) {
+        for (let i = 0; i < monstersInLevel.length; i++) {
             drawMonster(monstersInLevel[i])
         }
     }
@@ -294,8 +309,8 @@ function generateAPositionOnMapWithoutWalls() {
         y: 0
     }
     let helperArray = []
-    for (i = 0; i < levelMap.length; i++) {
-        for (j = 0; j < levelMap.length; j++) {
+    for (let i = 0; i < levelMap.length; i++) {
+        for (let j = 0; j < levelMap.length; j++) {
             let location = levelMap[i][j]
             let posX = i
             let posY = j
@@ -333,7 +348,7 @@ function drawExit() {
 
 function drawLoot() {
     // if (monstersInLevel.length != 0) {
-    for (i = 0; i < lootTable.length; i++) {
+    for (let i = 0; i < lootTable.length; i++) {
         let currentLoot = lootTable[i]
         // lootImg.onload = function () {
         ctx.drawImage(lootImg, (currentLoot.x), (currentLoot.y), tileSize, tileSize)
@@ -343,7 +358,7 @@ function drawLoot() {
 }
 
 function moveMonsters() {
-    for (i = 0; i < monstersInLevel.length; i++) {
+    for (let i = 0; i < monstersInLevel.length; i++) {
         let currentMonster = monstersInLevel[i]
         moveMonster(currentMonster)
     }
@@ -368,7 +383,7 @@ function checkIfNearExit() {
 
 // proximity check is called every time the board is redrawn, for example after hero or monster moved, in order to initiate fights
 function checkAllMonstersForProximity() {
-    for (i = 0; i < monstersInLevel.length; i++) {
+    for (let i = 0; i < monstersInLevel.length; i++) {
         let currentMonster = monstersInLevel[i]
         // checks for playerCharacter.currentHealth to prevent further fights against hero's corpse after hero's deatj
         if ((checkForPlayerProximity(currentMonster, 1) && (playerCharacter.currentHealth > 0)) == true) {
@@ -427,6 +442,9 @@ function checkForLevelUp() {
     else if (playerCharacter.experiencePoints >= 250 && playerCharacter.level < 2) {
         playerCharacter.levelUp()
     }
+    else if (playerCharacter.experiencePoints >= 500 && playerCharacter.level < 3) {
+        playerCharacter.levelUp()
+    }
     updateHeroStatsInInfoBar()
 }
 
@@ -481,8 +499,8 @@ function fogOfWar() {
         testYDown = playerCharacter.y / tileSize + 3
     }
     // set visibility == true around the player
-    for (i = (testXLeft); i < (testXRight); i++) {
-        for (j = (testYUp); j < (testYDown); j++) {
+    for (let i = (testXLeft); i < (testXRight); i++) {
+        for (let j = (testYUp); j < (testYDown); j++) {
 
             levelMap[i][j].visible = true
 
@@ -510,7 +528,7 @@ function initLevel() {
     else {
         genLevel()
     }
-    if (typeof playerCharacter == "undefined") {
+    if (typeof playerCharacter == "undefined" || playerCharacter.currentHealth <= 0) {
         let position = generateAPositionOnMapWithoutWalls()
         playerCharacter = new player(position[0] * tileSize, position[1] * tileSize)
     } else {
@@ -519,8 +537,8 @@ function initLevel() {
         playerCharacter.y = position[1] * tileSize
         playerCharacter.hasKey = false
     }
-    for (i = 0; i < levelMap.length; i++) {
-        for (j = 0; j < levelMap.length; j++) {
+    for (let i = 0; i < levelMap.length; i++) {
+        for (let j = 0; j < levelMap.length; j++) {
             levelMap[i][j].visible = false
         }
     }
@@ -548,8 +566,8 @@ function genLevel() {
     }
 
     const rows = level.split('\n').map(row => row.split(''));
-    for (i = 0; i < mapSize; i++) {
-        for (j = 0; j < mapSize; j++) {
+    for (let i = 0; i < mapSize; i++) {
+        for (let j = 0; j < mapSize; j++) {
             if (rows[i][j] == 'W') {
                 levelMap[i][j].wall = true
             } else if (rows[i][j] == 'S') {
@@ -561,6 +579,7 @@ function genLevel() {
 }
 
 function startGame() {
+    whatLevelAreWeIn = 1
     initLevel()
     drawBoard()
     document.onkeydown = function (e) {
@@ -601,9 +620,11 @@ function loadInfobar() {
     topDiv.innerHTML = "" // deletes start button or fight log etc
     let heroStatsDiv = document.createElement('div')
     heroStatsDiv.classList.add("heroStatsDiv")
-    heroStatsDiv.innerText = `Health: ${playerCharacter.currentHealth}/${playerCharacter.maximumHealth}
+    heroStatsDiv.innerText = `Level: ${playerCharacter.level}
+    Health: ${playerCharacter.currentHealth}/${playerCharacter.maximumHealth}
     Damage: 1-${playerCharacter.damage} + ${playerCharacter.weaponDamageAdded}
-            Armor: ${playerCharacter.armor} + ${playerCharacter.armorAdded}           
+            Armor: ${playerCharacter.armor} + ${playerCharacter.armorAdded} 
+            Healing potions: ${playerCharacter.healingPotions}          
             Experience Points: ${playerCharacter.experiencePoints}`
     topDiv.appendChild(heroStatsDiv)
     let weaponDiv = document.createElement('div')
@@ -624,9 +645,11 @@ function loadInfobar() {
 
 
 function updateHeroStatsInInfoBar() {
-    let topDiv = document.getElementsByClassName("heroStatsDiv")[0].innerText = `Health: ${playerCharacter.currentHealth}/${playerCharacter.maximumHealth}
+    let topDiv = document.getElementsByClassName("heroStatsDiv")[0].innerText = `Level: ${playerCharacter.level}
+    Health: ${playerCharacter.currentHealth}/${playerCharacter.maximumHealth}
     Damage: 1-${playerCharacter.damage} + ${playerCharacter.weaponDamageAdded}
-            Armor: ${playerCharacter.armor} + ${playerCharacter.armorAdded}           
+            Armor: ${playerCharacter.armor} + ${playerCharacter.armorAdded} 
+            Healing potions: ${playerCharacter.healingPotions}          
             Experience Points: ${playerCharacter.experiencePoints}`
 
 }
@@ -658,7 +681,7 @@ function appendLoseButtonToInfoBar() {
 }
 
 function removeDeadMonstersFromGame(monsterID) {
-    for (i = 0; i < monstersInLevel.length; i++) {
+    for (let i = 0; i < monstersInLevel.length; i++) {
         if (monstersInLevel[i].currentHealth < 1) {
             monstersInLevel.splice(i, 1)
         }
@@ -678,6 +701,7 @@ function fight(monsterID) {
         playerCharacter.attack(monsterID)
         if (monsterID.currentHealth > 0) {
             monsterID.attack()
+            playerCharacter.useHealthPotionIfInDanger()
         }
     }
     if (playerCharacter.currentHealth > 0) {
@@ -708,8 +732,8 @@ window.onload = function () {
 
 // turns fog of war off for debugging reasons
 function turnFOWOff() {
-    for (i = 0; i < levelMap.length; i++) {
-        for (j = 0; j < levelMap.length; j++) {
+    for (let i = 0; i < levelMap.length; i++) {
+        for (let j = 0; j < levelMap.length; j++) {
             let location = levelMap[i][j]
             location.visible = true
             location.draw()
